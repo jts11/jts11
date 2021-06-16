@@ -1,1 +1,188 @@
+
+
+
 Hello World
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ugliest To-Do</title>
+  <script type="text/javascript" src="https://sdk.userbase.com/2/userbase.js"></script>
+
+</head>
+
+<body>
+  <!-- Loading View -->
+  <div id="loading-view">Loading...</div>
+
+  <!-- Auth View -->
+  <div id="auth-view">
+    <h1>Login</h1>
+    <form id="login-form">
+      <input id="login-username" type="text" required placeholder="Username">
+      <input id="login-password" type="password" required placeholder="Password">
+      <input type="submit" value="Sign in">
+    </form>
+    <div id="login-error"></div>
+
+    <h1>Create an account</h1>
+    <form id="signup-form">
+      <input id="signup-username" type="text" required placeholder="Username">
+      <input id="signup-password" type="password" required placeholder="Password">
+      <input type="submit" value="Create an account">
+    </form>
+    <div id="signup-error"></div>
+  </div>
+
+  <!-- Inventory View -->
+  <div id="inventory-view">
+    <div id="username">
+    <input type="button" value="Logout" id="logout-button">
+    <div id="logout-error"></div>
+
+      <h1>Inventory List</h1>
+      <div id="inventory-list"></div>
+      <div id="db-loading">Loading inventory...</div>
+      <div id="db-error"></div>
+
+      <form id="add-inventory-form">
+        <input id="add-inventory" type="text" required placeholder="Inventory">
+        <input type="submit" value="Add">
+      </form>
+      <div id="add-inventory-error"></div>
+    </div>
+  </div>
+
+  <!-- application code -->
+  <script type="text/javascript">
+    userbase.init({ appId: 'bf04ae65-dc12-4f36-bf88-92d96a8626f5' })
+      .then((session) => session.user ? showInventoryList(session.user.username) : showAuth())
+      .catch(() => showAuth())
+      .finally(() => document.getElementById('loading-view').style.display = 'none')
+
+    function handleLogin(e) {
+    e.preventDefault()
+
+    const username = document.getElementById('login-username').value
+    const password = document.getElementById('login-password').value
+
+    userbase.signIn({ username, password, rememberMe: 'session' })
+      .then((user) => showInventoryList(user.username))
+      .catch((e) => document.getElementById('login-error').innerHTML = e)
+    }
+
+    function handleSignUp(e) {
+    e.preventDefault()
+
+    const username = document.getElementById('signup-username').value
+    const password = document.getElementById('signup-password').value
+
+    userbase.signUp({ username, password, rememberMe: 'none' })
+      .then((user) => showInventoryList(user.username))
+      .catch((e) => document.getElementById('signup-error').innerHTML = e)
+    }
+
+    function handleLogout() {
+      userbase.signOut()
+        .then(() => showAuth())
+        .catch((e) => document.getElementById('logout-error').innerText = e)
+    }
+
+    function showInventoryList(username) {
+      document.getElementById('auth-view').style.display = 'none'
+      document.getElementById('inventory-view').style.display = 'block'
+
+      //reset the inventory view
+      document.getElementById('username').innerHTML = username
+      document.getElementById('inventory-list').innerText = ''
+      document.getElementById('db-loading').style.display = 'block'
+      document.getElementById('db-error').innerText = ''
+
+      userbase.openDatabase({ databaseName: 'inventory-list', changeHandler })
+        .catch((e) => document.getElementById('db-error').innerText = e)
+    }
+
+    function showAuth() {
+      document.getElementById('todo-view').style.display = 'none'
+      document.getElementById('auth-view').style.display = 'block'
+      document.getElementById('login-username').value = ''
+      document.getElementById('login-password').value = ''
+      document.getElementById('login-error').innerText = ''
+      document.getElementById('signup-username').value = ''
+      document.getElementById('signup-password').value = ''
+      document.getElementById('signup-error').innerText = ''
+    }
+
+    function changeHandler(items) {
+      document.getElementById('db-loading').style.display = 'none'
+
+      const inventoryList = document.getElementById('inventory-list')
+
+      if (items.length === 0) {
+        inventoryList.innerText = 'Empty'
+      } else {
+        // clear the list
+        inventoryList.innerHTML = ''
+
+        // render all the to-do items
+        for (let i = 0; i < items.length; i++) {
+
+          // build the todo delete button
+          const inventoryDelete = document.createElement('button')
+          inventoryDelete.innerHTML = 'X'
+          inventoryDelete.style.display = 'inline-block'
+          inventoryDelete.onclick = () => {
+            userbase.deleteItem({ databaseName: 'inventoryList', itemId: items[i].itemId })
+              .catch((e) => document.getElementById('add-inventory-error').innerHTML = e)
+          }
+
+          // build the todo checkbox
+          const inventoryBox = document.createElement('input')
+          inventoryBox.type = 'checkbox'
+          inventoryBox.id = items[i].itemId
+          inventoryBox.checked = items[i].item.complete ? true : false
+          inventoryBox.onclick = (e) => {
+            e.preventDefault()
+            userbase.updateItem({ databaseName: 'inventoryList', itemId: items[i].itemId, item: {
+              'inventory': items[i].item.inventory,
+              'complete': !items[i].item.complete
+            }})
+            .catch((e) => document.getElementById('add-inventory-error').innerHTML = e)
+          }
+
+          // build the todo label
+          const inventoryLabel = document.createElement('label')
+          inventoryLabel.innerHTML = items[i].item.todo
+          inventoryLabel.style.textDecoration = items[i].item.complete ? 'line-through' : 'none'
+
+          // append the todo item to the list
+          const inventoryItem = document.createElement('div')
+          inventoryItem.appendChild(inventoryDelete)
+          inventoryItem.appendChild(inventoryBox)
+          inventoryItem.appendChild(inventoryLabel)
+          inventoryList.appendChild(inventoryItem)
+        }
+      }
+
+      function addInventoryHandler(e) {
+        e.preventDefault()
+
+        const inventory = document.getElementById('add-inventory').value
+
+        userbase.insertItem({ databaseName: 'inventories', item: { 'inventory': inventory }})
+          .then(() => document.getElementById('add-inventory').value = '')
+          .catch((e) => document.getElementById('add-inventory-error').innerHTML = e)
+      }
+
+    document.getElementById('login-form').addEventListener('submit', handleLogin)
+    document.getElementById('signup-form').addEventListener('submit', handleSignUp)
+    document.getElementById('add-inventory-form').addEventListener('submit', addInventoryHandler)
+    document.getElementById('logout-button').addEventListener('click', handleLogout)
+
+    document.getElementById('inventory-view').style.display = 'none'
+    document.getElementById('auth-view').style.display = 'none'
+
+  </script>
+</body>
+</html>
