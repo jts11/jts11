@@ -56,7 +56,7 @@ Hello World
 
   <!-- application code -->
   <script type="text/javascript">
-    userbase.init({ appId: 'bf04ae65-dc12-4f36-bf88-92d96a8626f5' })
+    userbase.init({ appId: bf04ae65-dc12-4f36-bf88-92d96a8626f5 })
       .then((session) => session.user ? showInventoryList(session.user.username) : showAuth())
       .catch(() => showAuth())
       .finally(() => document.getElementById('loading-view').style.display = 'none')
