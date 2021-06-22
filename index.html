@@ -1,8 +1,4 @@
 
-
-
-Hello World
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -56,7 +52,7 @@ Hello World
 
   <!-- application code -->
   <script type="text/javascript">
-    userbase.init({ appId: bf04ae65-dc12-4f36-bf88-92d96a8626f5 })
+    userbase.init({ appId: 'bf04ae65-dc12-4f36-bf88-92d96a8626f5' })
       .then((session) => session.user ? showInventoryList(session.user.username) : showAuth())
       .catch(() => showAuth())
       .finally(() => document.getElementById('loading-view').style.display = 'none')
@@ -73,14 +69,14 @@ Hello World
     }
 
     function handleSignUp(e) {
-    e.preventDefault()
+      e.preventDefault()
 
-    const username = document.getElementById('signup-username').value
-    const password = document.getElementById('signup-password').value
+      const username = document.getElementById('signup-username').value
+      const password = document.getElementById('signup-password').value
 
-    userbase.signUp({ username, password, rememberMe: 'none' })
-      .then((user) => showInventoryList(user.username))
-      .catch((e) => document.getElementById('signup-error').innerHTML = e)
+      userbase.signUp({ username, password, rememberMe: 'none' })
+        .then((user) => showInventoryList(user.username))
+        .catch((e) => document.getElementById('signup-error').innerHTML = e)
     }
 
     function handleLogout() {
@@ -104,7 +100,7 @@ Hello World
     }
 
     function showAuth() {
-      document.getElementById('todo-view').style.display = 'none'
+      document.getElementById('inventory-view').style.display = 'none'
       document.getElementById('auth-view').style.display = 'block'
       document.getElementById('login-username').value = ''
       document.getElementById('login-password').value = ''
@@ -153,7 +149,7 @@ Hello World
 
           // build the todo label
           const inventoryLabel = document.createElement('label')
-          inventoryLabel.innerHTML = items[i].item.todo
+          inventoryLabel.innerHTML = items[i].item.name
           inventoryLabel.style.textDecoration = items[i].item.complete ? 'line-through' : 'none'
 
           // append the todo item to the list
@@ -164,6 +160,7 @@ Hello World
           inventoryList.appendChild(inventoryItem)
         }
       }
+    }
 
       function addInventoryHandler(e) {
         e.preventDefault()
